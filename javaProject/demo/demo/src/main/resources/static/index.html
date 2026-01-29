@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Number Guessing Game</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #1a1a1a; color: white; padding-top: 50px; }
+        .container { background: #2d2d2d; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        input { padding: 12px; border-radius: 8px; border: none; width: 200px; margin: 10px; font-size: 16px; }
+        button { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #history { margin-top: 20px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Number Guessing Game</h1>
+        <div id="setup">
+            <p>How many attempts do you want? (1-10)</p>
+            <input type="number" id="guessesInput" min="1" max="10" value="5">
+            <button onclick="startGame()">Start Game</button>
+        </div>
+        <div id="playArea" style="display:none;">
+            <p id="feedback">Guess a number between 1 and 100</p>
+            <input type="number" id="numInput" placeholder="Enter guess">
+            <button onclick="makeGuess()">Submit</button>
+            <div id="history">History: </div>
+        </div>
+    </div>
+
+    <script>
+        async function startGame() {
+            const g = document.getElementById('guessesInput').value;
+            // This connects to the @PostMapping("/start") in Java
+            const response = await fetch(`/api/start?guesses=${g}`, { method: 'POST' });
+            if(response.ok) {
+                document.getElementById('setup').style.display = 'none';
+                document.getElementById('playArea').style.display = 'block';
+            }
+        }
+
+        async function makeGuess() {
+            const n = document.getElementById('numInput').value;
+            // This connects to the @PostMapping("/guess") in Java
+            const res = await fetch(`/api/guess?num=${n}`, { method: 'POST' });
+            const data = await res.json();
+            
+            document.getElementById('history').innerText = "History: " + data.history.join(", ");
+            
+            if (data.result === "WIN" || data.result === "LOSE") {
+                alert(data.message);
+                location.reload(); // Restart the game
+            } else {
+                document.getElementById('feedback').innerText = data.hint;
+                document.getElementById('numInput').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
